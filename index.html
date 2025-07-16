@@ -149,9 +149,19 @@
         }
       }
 
+      function getWebSocketServer()
+      {
+        if (window.location.host === "localhost:8000")
+        {
+          return "ws://localhost:8001/";
+        }
+        return "wss://old-rosella-emmacivello-4e9f425a.koyeb.app/";
+      }
+
       function init()
       {
-        websocket = new WebSocket("ws://localhost:8001/");
+        // websocket = new WebSocket("ws://localhost:8001/");
+        websocket = new WebSocket(getWebSocketServer());
         websocket.addEventListener("message", ({data}) => recvMsg(data));
 
         websocket.onclose = function(e){
