@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Tic Tac Toe</title>
+    <style>
+      .button-gameSquare
+      {
+        width: 50px;
+        height: 50px;
+        background-color: aliceblue;
+        border-radius: 4px;
+        border: none;
+        color: black;
+        font-size: 20px;
+      }
+      .button-gameSquareHover:hover
+      {
+        background-color: rgb(163, 183, 201);
+      }
+      .button-send
+      {
+        width: 80px;
+        height: 30px;
+        background-color: aliceblue;
+        cursor: pointer;
+        border-radius: 4px;
+        border: none;
+        display: block;
+        margin: auto;
+        color: black !important;
+        font-size: 30 !important;
+      }
+    </style>
+  </head>
+  <body onload="init()">
+
+    <div id="LobbyScreen">
+      <h3>
+        Welcome to tic tac toe.
+      </h3>
+      <p>
+        Waiting for opponent ...
+      </p>
+    </div>
+    
+    <div id="PlayScreen" style="display: none; width: 150px; margin: auto;">
+       <p id="CrtPlayerBanner">Your turn</p>
+
+      <div style="position: absolute; background-color: rgb(76, 76, 76); width: 150px; height: 150px;"></div>
+      <div id="Gameboard" style="position: relative; top: -4px; left: -4px;  display: grid; grid-template-columns: 33% 33% 33%; gap: 6px;">
+          <button class="button-gameSquare" onclick="col=0; row=0; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=1; row=0; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=2; row=0; updateButtonSelection(this);"></button>
+
+          <button class="button-gameSquare" onclick="col=0; row=1; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=1; row=1; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=2; row=1; updateButtonSelection(this);"></button>
+
+          <button class="button-gameSquare" onclick="col=0; row=2; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=1; row=2; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=2; row=2; updateButtonSelection(this);"></button>
+      </div>
+      
+      <br>
+      <button id="sendButton" class="button-send" onclick="sendMsg()">Finish Turn</button>
+    </div>
+
+    <div id="EndScreen" style="display: none; width: 150px; margin: auto;">
+      <p id="WinnerBanner"></p>
+    </div>
+
+    <div id="DisconnectedScreen" style="display: none;">
+      <p>Lost connection to server :(</p>
+    </div>
+    
+
+    
+
+    <script>
+      var websocket, row, col;
+
+      function disableButtons()
+      {
+        var buttons = document.getElementsByClassName("button-gameSquare");
+        for(var i=0; i<buttons.length; i++)
+        {
+          buttons[i].disabled = true;
+          buttons[i].style.cursor = "not-allowed";
+          buttons[i].style.backgroundColor = "none";
+          if (buttons[i].classList.contains("button-gameSquareHover"))
+          {
+            buttons[i].classList.remove("button-gameSquareHover");
+          }
+        }
+      }
+
+      function updateButtonSelection(node=null)
+      {
+        var buttons = document.getElementsByClassName("button-gameSquare");
+        for(var i=0; i<buttons.length; i++)
+        {
+          buttons[i].style.border = "none";
+          if(buttons[i].innerHTML == "")
+          {
+            buttons[i].disabled = false;
+            buttons[i].style.cursor = "pointer";
+            buttons[i].classList.add("button-gameSquareHover");
+          }
+          else
+          {
+            buttons[i].disabled = true;
+            buttons[i].style.cursor = "not-allowed";
+            if (buttons[i].classList.contains("button-gameSquareHover"))
+            {
+              buttons[i].classList.remove("button-gameSquareHover");
+            }
+          }
+        }
+
+        if (node != null)
+        {
+          node.style.border = "4px solid black";
+        }
+
+        document.getElementById("sendButton").disabled = false;
+        document.getElementById("sendButton").style.cursor = "pointer";
+      }
+
+      function updateBoard(board)
+      {
+        console.log("UPDATING BOARD",board);
+        var squares = document.getElementById("Gameboard").children;
+
+        for (var i=0; i<3; i++)
+        {
+          for (var j=0; j<3; j++)
+          {
+            if (board[i][j] == 'X')
+            {
+              squares[i * 3 + j].innerHTML = 'X';
+              squares[i * 3 + j].disabled = true;
+            }
+            else if (board[i][j] == 'O')
+            {
+              squares[i * 3 + j].innerHTML = 'O';
+              squares[i * 3 + j].disabled = true;
+            }
+          }
+        }
+      }
+
+      function init()
+      {
+        websocket = new WebSocket("ws://localhost:8001/");
+        websocket.addEventListener("message", ({data}) => recvMsg(data));
+
+        websocket.onclose = function(e){
+          if (document.getElementById("EndScreen").style.display == "none")
+        {
+          document.getElementById("DisconnectedScreen").style.display = "block";
+          document.getElementById("LobbyScreen").style.display = "none";
+          document.getElementById("PlayScreen").style.display = "none";
+        }
+
+          
+        }
+      }
+
+      function recvMsg(data)
+      {
+        var msg = JSON.parse(data);
+        console.log("RECEIVED JS: ",msg);
+
+        switch(msg.msgId)
+        {
+          case 0:
+            // Adding to lobby, lobby screen already shown
+            break;
+          case 1:
+            // Starting game
+            document.getElementById("LobbyScreen").style.display = "none";
+            document.getElementById("PlayScreen").style.display = "block";
+            break;
+          case 2:
+            // your turn
+            updateBoard(msg.board);
+            updateButtonSelection();
+            document.getElementById("PlayScreen").style.pointerEvents = "true";
+            document.getElementById("CrtPlayerBanner").innerHTML = ("Your turn. You are " + msg.piece);
+            document.getElementById("sendButton").disabled = true;
+            document.getElementById("sendButton").style.cursor = "not-allowed";
+            break;
+          case 3:
+            // waiting for opponent
+            updateBoard(msg.board);
+            disableButtons();
+            document.getElementById("PlayScreen").style.pointerEvents = "false";
+            document.getElementById("CrtPlayerBanner").innerHTML = "Opponent's turn";
+            document.getElementById("sendButton").disabled = true;
+            document.getElementById("sendButton").style.cursor = "not-allowed";
+            break;
+          case 4:
+            // game over
+            document.getElementById("EndScreen").style.display = "block";
+            document.getElementById("CrtPlayerBanner").innerHTML = "";
+            document.getElementById("sendButton").style.display = "none";
+
+            updateBoard(msg.board);
+            
+            if (msg.winner == msg.you)
+            {
+              document.getElementById("WinnerBanner").innerHTML = "Game over. You won!";
+            }
+            else if (msg.winner == "tie")
+            {
+              document.getElementById("WinnerBanner").innerHTML = "Game over. It's a tie.";
+            }
+            else
+            {
+              document.getElementById("WinnerBanner").innerHTML = "Game over. You lost!";
+            }
+
+            break;
+          case 7:
+            // disconnection
+            if (document.getElementById("EndScreen").style.display == "none")
+            {
+              document.getElementById("DisconnectedScreen").style.display = "block";
+              document.getElementById("DisconnectedScreen").innerHTML = "Opponent lost connection. You win by forfeit.";
+
+              document.getElementById("LobbyScreen").style.display = "none";
+              document.getElementById("PlayScreen").style.display = "none";
+            }
+          // case 6:
+          //   // invalid move
+          //   break;
+        }
+      }
+
+      function sendMsg()
+      {
+        var msg = {
+          "msgId": 5,
+          "row": row,
+          "col": col
+        }
+        websocket.send(JSON.stringify(msg));
+      }
+    </script>
+  </body>
+</html>
