@@ -1,9 +1,10 @@
 import asyncio
 import json
-import threading
-import sys
-import time
 import websockets
+
+import http
+import os
+import signal
 
 from websockets.asyncio.server import serve, broadcast
 
@@ -113,6 +114,10 @@ class Game():
         # not a winner or a tie
         return 2
 
+
+def healthCheck(connection, request):
+    if request.path == "/healthz":
+        return connection.respond(http.HTTPStatus.OK, "OK\n")
 
 async def clearSocket(websocket, game):
     while True:
@@ -237,8 +242,13 @@ async def handler(websocket):
 
 
 async def main():
-    # seems like this is the server's socket ""=127.0.0.1:8001
-    async with serve(handler, "", 8001) as server:
+    # # seems like this is the server's socket ""=127.0.0.1:8001
+    # async with serve(handler, "", 8001) as server:
+    #     await server.wait_closed()
+    port = int(os.environ.get("PORT", "8001"))
+    async with serve(handler, "", port, process_request=healthCheck) as server:
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(signal.SIGTERM, server.close)
         await server.wait_closed()
 
 
