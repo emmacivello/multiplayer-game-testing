@@ -164,14 +164,15 @@ async def handler(websocket):
     # tell client game's starting
     g.active &= (await MessageGameFound().send(websocket))
 
-    # tell client they're waiting for player 1 (if they're player 2)
-    if g.crtId != websocket.id:
-        g.active &= (await MessageOpponentsMove(g.board).send(websocket))
+    # # tell client they're waiting for player 1 (if they're player 2)
+    # if g.crtId != websocket.id:
+    #     g.active &= (await MessageOpponentsMove(g.board).send(websocket))
 
     # game loop
     sendYourMoveMsg = False
     while ((g.winner is None) and g.active):
-        await asyncio.sleep(1)
+        # await asyncio.sleep(1)
+        await asyncio.sleep(0.05)
 
         # transition between players
         if g.transitionMode == True:
@@ -233,6 +234,8 @@ async def handler(websocket):
                 g.winner = websocket.id
             elif(state == 1):
                 g.winner = "tie"
+        else:
+            g.active &= (await MessageOpponentsMove(g.board).send(websocket))
     
     # doesn't matter if these succeed or not because it's the end
     if (not g.active):
