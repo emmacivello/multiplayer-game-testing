@@ -52,9 +52,10 @@ class MessageYourMove(Message):
         }
 
 class MessageOpponentsMove(Message):
-    def __init__(self, board):
+    def __init__(self, xo, board):
         self.msg = {
             "msgId": 3,
+            "piece": xo,
             "board": board
         }
 
@@ -180,7 +181,7 @@ async def handler(websocket):
 
             if not sendYourMoveMsg:
                 # tell client it's their turn
-                if (g.crtId == g.p1Id):
+                if (websocket.id == g.p1Id):
                     g.active &= (await MessageYourMove("X", g.board).send(websocket))
                 else:
                     g.active &= (await MessageYourMove("O", g.board).send(websocket))
@@ -208,10 +209,14 @@ async def handler(websocket):
             if (g.crtId == g.p1Id):
                 g.board[msg["row"]][msg["col"]] = 'X'
             else:
-                g.board[msg["row"]][msg["col"]] = 'O'   
+                g.board[msg["row"]][msg["col"]] = 'O'
 
             # tell client their turn's over
-            g.active &= (await MessageOpponentsMove(g.board).send(websocket))
+            if (websocket.id == g.p1Id):
+                g.active &= (await MessageOpponentsMove("X", g.board).send(websocket))
+            else:
+                g.active &= (await MessageOpponentsMove("O", g.board).send(websocket))
+            
             if (not g.active):
                 break
 
@@ -229,7 +234,11 @@ async def handler(websocket):
             elif(state == 1):
                 g.winner = "tie"
         else:
-            g.active &= (await MessageOpponentsMove(g.board).send(websocket))
+            if (websocket.id == g.p1Id):
+                g.active &= (await MessageOpponentsMove("X", g.board).send(websocket))
+            else:
+                g.active &= (await MessageOpponentsMove("O", g.board).send(websocket))
+            
     
     # doesn't matter if these succeed or not because it's the end
     if (not g.active):

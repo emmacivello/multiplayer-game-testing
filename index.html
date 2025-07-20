@@ -12,38 +12,23 @@
       {
         width: 50px;
         height: 50px;
-        /* background-color: aliceblue; */
         background-color: white;
         border-radius: 4px;
         border: none;
         color: black;
         font-size: 20px;
       }
-      .button-gameSquareHover:hover
-      {
-        /* background-color: rgb(163, 183, 201) !important; */
-      }
       .button-send
       {
         width: 80px;
         height: 36px;
-        /* width: 180px; */
-        /* height: 36px; */
-        /* background-color: aliceblue; */
-        /* padding: 10px; */
-        /* background-color: rgb(76, 76, 76); */
-        /* background-color: black; */
         background-color: rgb(176, 176, 176);
-        /* background-color: transparent; */
-        /* border: 2px solid rgb(176, 176, 176); */
-        /* color: white; */
         color: black;
         cursor: pointer;
         border-radius: 4px;
         border: none;
         display: block;
         margin: auto;
-        /* color: black !important; */
         font-size: 30 !important;
       }
       @keyframes text-blink-anim{
@@ -98,9 +83,10 @@
       </p>
     </div>
     
-    <div id="PlayScreen" style="display: none; width: 150px; margin: auto;">
+    <div id="PlayScreen" style="display: none; width: 80%; max-width: 150px; margin: auto;">
       <!-- <div style="position: absolute; background-color: rgb(76, 76, 76); width: 150px; height: 150px;"></div> -->
-       <div style="position: absolute; background-color: rgb(176, 176, 176); width: 150px; height: 150px;"></div>
+      <p id="pieceBanner" style="text-align: center;"></p>
+      <div style="position: absolute; background-color: rgb(176, 176, 176); width: 150px; height: 150px;"></div>
       <div id="Gameboard" style="position: relative; top: -4px; left: -4px;  display: grid; grid-template-columns: 33% 33% 33%; gap: 6px;">
           <button class="button-gameSquare" onclick="col=0; row=0; indicateSelectedSquare(this);"></button>
           <button class="button-gameSquare" onclick="col=1; row=0; indicateSelectedSquare(this);"></button>
@@ -193,19 +179,12 @@
               squares[i * 3 + j].disabled = true;
 
               squares[i * 3 + j].style.cursor = "not-allowed";
-              // squares[i * 3 + j].style.backgroundColor = "white";
-              if (squares[i * 3 + j].classList.contains("button-gameSquareHover"))
-              {
-                squares[i * 3 + j].classList.remove("button-gameSquareHover");
-              }
             }
             else
             {
               squares[i * 3 + j].disabled = false;
 
               squares[i * 3 + j].style.cursor = "pointer";
-              // squares[i * 3 + j].style.backgroundColor = "aliceBlue";
-              squares[i * 3 + j].classList.add("button-gameSquareHover");
             }
           }
         }
@@ -226,11 +205,6 @@
             squares[i * 3 + j].disabled = true;
 
             squares[i * 3 + j].style.cursor = "not-allowed";
-            // squares[i * 3 + j].style.backgroundColor = "white";
-            if (squares[i * 3 + j].classList.contains("button-gameSquareHover"))
-            {
-              squares[i * 3 + j].classList.remove("button-gameSquareHover");
-            }
           }
         }
       }
@@ -364,8 +338,8 @@
             showScreen("PlayScreen");
             
             piece = msg.piece
+            document.getElementById("pieceBanner").innerHTML = ("You are " + piece);
             showBoard(msg.board);
-            console.log("board",msg.board);
             activateSquares(msg.board);
             
             // hide the "it's your opponent's turn" msg
@@ -382,6 +356,8 @@
             // opponent's turn
             showScreen("PlayScreen");
 
+            piece = msg.piece;
+            document.getElementById("pieceBanner").innerHTML = ("You are " + piece);
             showBoard(msg.board);
             deactivateSquares();
 
