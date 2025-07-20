@@ -19,7 +19,7 @@
       }
       .button-gameSquareHover:hover
       {
-        background-color: rgb(163, 183, 201);
+        background-color: rgb(163, 183, 201) !important;
       }
       .button-send
       {
@@ -34,20 +34,29 @@
         color: black !important;
         font-size: 30 !important;
       }
-      @keyframes text-flicker-anim{
+      @keyframes text-blink-anim{
+        0% {color: black;}
+        49% {color: black;}
         50% { color: transparent; }
+        100% { color: transparent; }
       }
-      @-webkit-keyframes text-flicker-anim{
+      @-webkit-keyframes text-blink-anim{
+        0% {color: black;}
+        49% {color: black;}
         50% { color: transparent; }
+        100% { color: transparent; }
       }
-      @-moz-keyframes text-flicker-anim{
+      @-moz-keyframes text-blink-anim{
+        0% {color: black;}
+        49% {color: black;}
         50% { color: transparent; }
+        100% { color: transparent; }
       }
-      .text-flicker
+      .text-blink
       {
-        -webkit-animation: text-flicker-anim 2s infinite;
-        -moz-animation: text-flicker-anim 2s infinite;
-        animation: text-flicker-anim 2s infinite;
+        -webkit-animation: text-blink-anim 1s infinite;
+        -moz-animation: text-blink-anim 1s infinite;
+        animation: text-blink-anim 1s infinite;
       }
       
     </style>
@@ -56,7 +65,7 @@
 
     <div id="LobbyScreen">
       <h3 style="text-align: center;">
-        Welcome to tic tac toe.
+        Tic Tac Toe
       </h3>
       <p style="text-align: center;">
         Waiting for a match.
@@ -75,17 +84,17 @@
     <div id="PlayScreen" style="display: none; width: 150px; margin: auto;">
       <div style="position: absolute; background-color: rgb(76, 76, 76); width: 150px; height: 150px;"></div>
       <div id="Gameboard" style="position: relative; top: -4px; left: -4px;  display: grid; grid-template-columns: 33% 33% 33%; gap: 6px;">
-          <button class="button-gameSquare" onclick="col=0; row=0; updateButtonSelection(this);"></button>
-          <button class="button-gameSquare" onclick="col=1; row=0; updateButtonSelection(this);"></button>
-          <button class="button-gameSquare" onclick="col=2; row=0; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=0; row=0; indicateSelectedSquare(this);"></button>
+          <button class="button-gameSquare" onclick="col=1; row=0; indicateSelectedSquare(this);"></button>
+          <button class="button-gameSquare" onclick="col=2; row=0; indicateSelectedSquare(this);"></button>
 
-          <button class="button-gameSquare" onclick="col=0; row=1; updateButtonSelection(this);"></button>
-          <button class="button-gameSquare" onclick="col=1; row=1; updateButtonSelection(this);"></button>
-          <button class="button-gameSquare" onclick="col=2; row=1; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=0; row=1; indicateSelectedSquare(this);"></button>
+          <button class="button-gameSquare" onclick="col=1; row=1; indicateSelectedSquare(this);"></button>
+          <button class="button-gameSquare" onclick="col=2; row=1; indicateSelectedSquare(this);"></button>
 
-          <button class="button-gameSquare" onclick="col=0; row=2; updateButtonSelection(this);"></button>
-          <button class="button-gameSquare" onclick="col=1; row=2; updateButtonSelection(this);"></button>
-          <button class="button-gameSquare" onclick="col=2; row=2; updateButtonSelection(this);"></button>
+          <button class="button-gameSquare" onclick="col=0; row=2; indicateSelectedSquare(this);"></button>
+          <button class="button-gameSquare" onclick="col=1; row=2; indicateSelectedSquare(this);"></button>
+          <button class="button-gameSquare" onclick="col=2; row=2; indicateSelectedSquare(this);"></button>
       </div>
       
       <br>
@@ -93,77 +102,37 @@
       <button id="sendButton" class="button-send" onclick="sendMsg()" style="display: none;">Finish Turn</button>
     </div>
 
-    <div id="EndScreen" style="display: none; width: 150px; margin: auto;">
+    <div id="WinnerScreen" style="display: none;">
       <p id="WinnerBanner" style="text-align: center;"></p>
-    </div>
-
-    <div id="DisconnectedScreen" style="display: none;">
-      <p>Lost connection to server :(</p>
+      <button onclick="init();" class="button-send">Play again</button>
     </div>
     
 
+    <div id="ServerDisconnectedScreen" style="display: none;">
+      <h3 style="text-align: center;">Lost connection to server :(</h3>
+    </div>
+
+    <div id="OpponentDisconnectedScreen" style="display: none; text-align: center;">
+      <h3>
+        Opponent lost connection.
+      </h3>
+      <p>
+        You win by forfeit.
+      </p>
+      <button onclick="init();" class="button-send">Play again</button>
+    </div>
     
 
     <script>
+      // piece = X | O
       var websocket, row, col, piece;
-
-      function disableButtons()
+      
+      /*
+      Takes argument board, which is the official game state, sent from python server.
+      Fills GUI board with Xs and Os.
+      */
+      function showBoard(board)
       {
-        var buttons = document.getElementsByClassName("button-gameSquare");
-        for(var i=0; i<buttons.length; i++)
-        {
-          buttons[i].disabled = true;
-          buttons[i].style.cursor = "not-allowed";
-          buttons[i].style.backgroundColor = "none";
-          if (buttons[i].classList.contains("button-gameSquareHover"))
-          {
-            buttons[i].classList.remove("button-gameSquareHover");
-          }
-        }
-      }
-
-      function updateButtonSelection(node=null)
-      {
-        var buttons = document.getElementsByClassName("button-gameSquare");
-        for(var i=0; i<buttons.length; i++)
-        {
-          buttons[i].style.border = "none";
-          if(buttons[i].classList.contains("text-flicker"))
-          {
-            buttons[i].innerHTML = "";
-            buttons[i].classList.remove("text-flicker");
-          }
-          if(buttons[i].innerHTML == "")
-          {
-            buttons[i].disabled = false;
-            buttons[i].style.cursor = "pointer";
-            buttons[i].classList.add("button-gameSquareHover");
-          }
-          else
-          {
-            buttons[i].disabled = true;
-            buttons[i].style.cursor = "not-allowed";
-            if (buttons[i].classList.contains("button-gameSquareHover"))
-            {
-              buttons[i].classList.remove("button-gameSquareHover");
-            }
-          }
-        }
-
-        if (node != null)
-        {
-          node.style.border = "4px solid black";
-          node.innerHTML = piece;
-          node.classList.add("text-flicker");
-        }
-
-        document.getElementById("sendButton").disabled = false;
-        document.getElementById("sendButton").style.cursor = "pointer";
-      }
-
-      function updateBoard(board)
-      {
-        console.log("UPDATING BOARD",board);
         var squares = document.getElementById("Gameboard").children;
 
         for (var i=0; i<3; i++)
@@ -173,17 +142,112 @@
             if (board[i][j] == 'X')
             {
               squares[i * 3 + j].innerHTML = 'X';
-              squares[i * 3 + j].disabled = true;
             }
             else if (board[i][j] == 'O')
             {
               squares[i * 3 + j].innerHTML = 'O';
-              squares[i * 3 + j].disabled = true;
+            }
+            else
+            {
+              squares[i * 3 + j].innerHTML = '';
             }
           }
         }
       }
 
+      /*
+      Intended to be called at the start of the client's turn.
+      Functionally and visually disables buttons that have an X/O. Enables all others.
+      */
+      function activateSquares(board)
+      {
+        var squares = document.getElementById("Gameboard").children;
+
+        for (var i=0; i<3; i++)
+        {
+          for (var j=0; j<3; j++)
+          {
+            if ((board[i][j] == 'X') || (board[i][j] == 'O'))
+            {
+              squares[i * 3 + j].disabled = true;
+
+              squares[i * 3 + j].style.cursor = "not-allowed";
+              squares[i * 3 + j].style.backgroundColor = "white";
+              if (squares[i * 3 + j].classList.contains("button-gameSquareHover"))
+              {
+                squares[i * 3 + j].classList.remove("button-gameSquareHover");
+              }
+            }
+            else
+            {
+              squares[i * 3 + j].disabled = false;
+
+              squares[i * 3 + j].style.cursor = "pointer";
+              squares[i * 3 + j].style.backgroundColor = "aliceBlue";
+              squares[i * 3 + j].classList.add("button-gameSquareHover");
+            }
+          }
+        }
+      }
+
+      /*
+      Intended to be called at the start of the client's opponent's turn.
+      Functionally and visually disables all buttons.
+      */
+      function deactivateSquares()
+      {
+        var squares = document.getElementById("Gameboard").children;
+
+        for (var i=0; i<3; i++)
+        {
+          for (var j=0; j<3; j++)
+          {
+            squares[i * 3 + j].disabled = true;
+
+            squares[i * 3 + j].style.cursor = "not-allowed";
+            squares[i * 3 + j].style.backgroundColor = "white";
+            if (squares[i * 3 + j].classList.contains("button-gameSquareHover"))
+            {
+              squares[i * 3 + j].classList.remove("button-gameSquareHover");
+            }
+          }
+        }
+      }
+
+      /*
+      Called during client's turn when client selects a square.
+      Shows their pending move.
+      Also enables "Finish Turn" button (it's disabled until a pending move's established).
+      */
+      function indicateSelectedSquare(selectedSq)
+      {
+        var squares = document.getElementsByClassName("button-gameSquare");
+
+        // Clear "selected" style from all buttons
+        for(var i=0; i<squares.length; i++)
+        {
+          squares[i].style.border = "none";
+          if(squares[i].classList.contains("text-blink"))
+          {
+            squares[i].innerHTML = "";
+            squares[i].classList.remove("text-blink");
+          }
+        }
+
+        // Add "selected" style to selectedSq
+        selectedSq.style.border = "4px solid black";
+        selectedSq.innerHTML = piece;
+        selectedSq.classList.add("text-blink");
+
+        // Now that a square's been selected, enable the "Finish Turn button"
+        document.getElementById("sendButton").disabled = false;
+        document.getElementById("sendButton").style.cursor = "pointer";
+        document.getElementById("sendButton").title = "";
+      }
+
+      /*
+      Distinguish between local and remote python websocket server.
+      */
       function getWebSocketServer()
       {
         if (window.location.host === "localhost:8000")
@@ -193,26 +257,74 @@
         return "wss://old-rosella-emmacivello-4e9f425a.koyeb.app/";
       }
 
+      /*
+      Shows screen with id=screenName. Hides all others.
+      */
+      function showScreen(screenName)
+      {
+        var allScreens = ["LobbyScreen", "MatchFound", "PlayScreen", "WinnerScreen", "ServerDisconnectedScreen", "OpponentDisconnectedScreen"];
+
+        for(var i=0; i<allScreens.length; i++)
+        {
+          if(allScreens[i] == screenName)
+          {
+            document.getElementById(allScreens[i]).style.display = "block";
+          }
+          else
+          {
+            document.getElementById(allScreens[i]).style.display = "none";
+          }
+        }
+      }
+
+      /*
+      Establish connection to server.
+      Connect msg event to msg handler function.
+      Connect websocket close event to handler function.
+      */
       function init()
       {
-        // websocket = new WebSocket("ws://localhost:8001/");
+        showScreen("LobbyScreen");
+
         websocket = new WebSocket(getWebSocketServer());
         websocket.addEventListener("message", ({data}) => recvMsg(data));
 
         websocket.onclose = function(e){
-          if (document.getElementById("EndScreen").style.display == "none")
+          if ((document.getElementById("WinnerScreen").style.display == "none") && 
+              (document.getElementById("OpponentDisconnectedScreen").style.display == "none"))
           {
-            document.getElementById("DisconnectedScreen").style.display = "block";
-            document.getElementById("LobbyScreen").style.display = "none";
-            document.getElementById("PlayScreen").style.display = "none";
+            // On disconnection from server:
+            // If the game's already over or the opponent's already disconnected, leave the current screen up,
+            // don't care about server disconnection at that point.
+            showScreen("ServerDisconnectedScreen");
           }
         }
+      }
+
+      /*
+      Update msg in WinnerBanner to show win | tie | loss
+      */
+      function showWinner(winner, client)
+      {
+        if (winner == client)
+        {
+          document.getElementById("WinnerBanner").innerHTML = "You won!";
+        }
+        else if (winner == "tie")
+        {
+          document.getElementById("WinnerBanner").innerHTML = "It's a tie.";
+        }
+        else
+        {
+          document.getElementById("WinnerBanner").innerHTML = "You lost!";
+        }
+        // Don't call showScreen("WinnerScreen") because that hides PlayScreen. Still want to see the board here.
+        document.getElementById("WinnerScreen").style.display = "block";
       }
 
       function recvMsg(data)
       {
         var msg = JSON.parse(data);
-        console.log("RECEIVED JS: ",msg);
 
         switch(msg.msgId)
         {
@@ -221,87 +333,69 @@
             break;
           case 1:
             // Starting game
-            document.getElementById("LobbyScreen").style.display = "none";
-            document.getElementById("MatchFound").style.display = "block";
+            showScreen("MatchFound");
             break;
           case 2:
-            document.getElementById("MatchFound").style.display = "none";
-            document.getElementById("PlayScreen").style.display = "block";
             // your turn
+            showScreen("PlayScreen");
+            
             piece = msg.piece
-            updateBoard(msg.board);
-            updateButtonSelection();
-            document.getElementById("PlayScreen").style.pointerEvents = "true";
-            // document.getElementById("CrtPlayerBanner").innerHTML = ("Your turn. You are " + msg.piece);
+            showBoard(msg.board);
+            console.log("board",msg.board);
+            activateSquares(msg.board);
+            
+            // hide the "it's your opponent's turn" msg
             document.getElementById("waitingBanner").style.display = "none";
+            // functionally & visually disable sendButton until player selects a square
             document.getElementById("sendButton").style.display = "block";
-
             document.getElementById("sendButton").disabled = true;
             document.getElementById("sendButton").style.cursor = "not-allowed";
+            document.getElementById("sendButton").title = "Make a move before finishing your turn.";
             break;
           case 3:
-            document.getElementById("MatchFound").style.display = "none";
-            document.getElementById("PlayScreen").style.display = "block";
-            // waiting for opponent
-            updateBoard(msg.board);
-            disableButtons();
-            document.getElementById("PlayScreen").style.pointerEvents = "false";
+            // opponent's turn
+            showScreen("PlayScreen");
+
+            showBoard(msg.board);
+            deactivateSquares();
+
+            // hide the "it's your opponent's turn" msg and the sendButton
             document.getElementById("waitingBanner").style.display = "block";
             document.getElementById("sendButton").style.display = "none";
             break;
           case 4:
             // game over
-            document.getElementById("EndScreen").style.display = "block";
-            document.getElementById("sendButton").style.display = "none";
+            showBoard(msg.board);
+            showWinner(msg.winner, msg.you)
 
-            updateBoard(msg.board);
-            
-            if (msg.winner == msg.you)
-            {
-              document.getElementById("WinnerBanner").innerHTML = "You won!";
-            }
-            else if (msg.winner == "tie")
-            {
-              document.getElementById("WinnerBanner").innerHTML = "It's a tie.";
-            }
-            else
-            {
-              document.getElementById("WinnerBanner").innerHTML = "You lost!";
-            }
-
-            document.getElementById("sendButton").style.display = "none";
+            // hide the "it's your opponent's turn" msg and the sendButton
             document.getElementById("waitingBanner").style.display = "none";
+            document.getElementById("sendButton").style.display = "none";
 
             break;
-          case 7:
-            // disconnection
-            if (document.getElementById("EndScreen").style.display == "none")
+          case 5:
+            // opponent disconnection
+            if (document.getElementById("WinnerScreen").style.display == "none")
             {
-              document.getElementById("DisconnectedScreen").style.display = "block";
-              document.getElementById("DisconnectedScreen").innerHTML = "Opponent lost connection. You win by forfeit.";
-
-              document.getElementById("LobbyScreen").style.display = "none";
-              document.getElementById("PlayScreen").style.display = "none";
+              showScreen("OpponentDisconnectedScreen");
             }
-          // case 6:
-          //   // invalid move
-          //   break;
         }
       }
 
       function sendMsg()
       {
-        // clear button outline
+        // clear style of selected button
         var buttons = document.getElementsByClassName("button-gameSquare");
         for(var i=0; i<buttons.length; i++)
         {
           buttons[i].style.border = "none";
-          if(buttons[i].classList.contains("text-flicker"))
+          if(buttons[i].classList.contains("text-blink"))
           {
-            buttons[i].classList.remove("text-flicker");
+            buttons[i].classList.remove("text-blink");
           }
         }
 
+        // send message indicating which button was selected
         var msg = {
           "msgId": 5,
           "row": row,

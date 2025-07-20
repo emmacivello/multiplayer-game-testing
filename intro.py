@@ -68,9 +68,10 @@ class MessageGameOver(Message):
         }
 
 class MessageDisconnected(Message):
+    # opponent disconnection (not server disconnection)
     def __init__(self):
         self.msg = {
-            "msgId": 7
+            "msgId": 5
         }
 
 class MessagePing(Message):
@@ -114,7 +115,6 @@ class Game():
         # not a winner or a tie
         return 2
 
-
 def healthCheck(connection, request):
     if request.path == "/healthz":
         return connection.respond(http.HTTPStatus.OK, "OK\n")
@@ -132,7 +132,6 @@ async def clearSocket(websocket, game):
         except websockets.exceptions.ConnectionClosedError:
             game.active = False
             break
-
 
 async def handler(websocket):
     global lobby
@@ -164,14 +163,9 @@ async def handler(websocket):
     # tell client game's starting
     g.active &= (await MessageGameFound().send(websocket))
 
-    # # tell client they're waiting for player 1 (if they're player 2)
-    # if g.crtId != websocket.id:
-    #     g.active &= (await MessageOpponentsMove(g.board).send(websocket))
-
     # game loop
     sendYourMoveMsg = False
     while ((g.winner is None) and g.active):
-        # await asyncio.sleep(1)
         await asyncio.sleep(0.05)
 
         # transition between players
