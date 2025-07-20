@@ -2,8 +2,9 @@
 <html lang="en">
   <head>
     <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="font-awesome-4.7.0/css/font-awesome.min.css">
     <style>
-      p, h3, button
+      p, h2, h3, button
       {
         font-family: monospace;
       }
@@ -11,7 +12,8 @@
       {
         width: 50px;
         height: 50px;
-        background-color: aliceblue;
+        /* background-color: aliceblue; */
+        background-color: white;
         border-radius: 4px;
         border: none;
         color: black;
@@ -19,19 +21,29 @@
       }
       .button-gameSquareHover:hover
       {
-        background-color: rgb(163, 183, 201) !important;
+        /* background-color: rgb(163, 183, 201) !important; */
       }
       .button-send
       {
         width: 80px;
-        height: 30px;
-        background-color: aliceblue;
+        height: 36px;
+        /* width: 180px; */
+        /* height: 36px; */
+        /* background-color: aliceblue; */
+        /* padding: 10px; */
+        /* background-color: rgb(76, 76, 76); */
+        /* background-color: black; */
+        background-color: rgb(176, 176, 176);
+        /* background-color: transparent; */
+        /* border: 2px solid rgb(176, 176, 176); */
+        /* color: white; */
+        color: black;
         cursor: pointer;
         border-radius: 4px;
         border: none;
         display: block;
         margin: auto;
-        color: black !important;
+        /* color: black !important; */
         font-size: 30 !important;
       }
       @keyframes text-blink-anim{
@@ -62,27 +74,33 @@
     </style>
   </head>
   <body onload="init()">
+    <h2 style="text-align: center;">
+      Tic Tac Toe
+    </h2>
 
     <div id="LobbyScreen">
-      <h3 style="text-align: center;">
+      <!-- <h3 style="text-align: center;">
         Tic Tac Toe
-      </h3>
+      </h3> -->
       <p style="text-align: center;">
         Waiting for a match.
       </p>
     </div>
 
     <div id="MatchFound" style="display: none;">
-      <h3 style="text-align: center;">
+      <!-- <h3 style="text-align: center;">
         Match found.
-      </h3>
+      </h3> -->
       <p style="text-align: center;">
+        Match found.
+        <br>
         Gameboard loading.
       </p>
     </div>
     
     <div id="PlayScreen" style="display: none; width: 150px; margin: auto;">
-      <div style="position: absolute; background-color: rgb(76, 76, 76); width: 150px; height: 150px;"></div>
+      <!-- <div style="position: absolute; background-color: rgb(76, 76, 76); width: 150px; height: 150px;"></div> -->
+       <div style="position: absolute; background-color: rgb(176, 176, 176); width: 150px; height: 150px;"></div>
       <div id="Gameboard" style="position: relative; top: -4px; left: -4px;  display: grid; grid-template-columns: 33% 33% 33%; gap: 6px;">
           <button class="button-gameSquare" onclick="col=0; row=0; indicateSelectedSquare(this);"></button>
           <button class="button-gameSquare" onclick="col=1; row=0; indicateSelectedSquare(this);"></button>
@@ -98,12 +116,15 @@
       </div>
       
       <br>
-      <p id="waitingBanner" style="display: none; text-align: center;">Waiting for opponent</p>
-      <button id="sendButton" class="button-send" onclick="sendMsg()" style="display: none;">Finish Turn</button>
+      <!-- <p id="waitingBanner" style="display: none; text-align: center;">Waiting for opponent</p> -->
+       <p id="chooseSqBanner" style="display: none; text-align: center;">Choose an open square</p>
+      <p id="waitingBanner" style="display: none; text-align: center;">Opponent's turn</p>
+      <button id="sendButton" class="button-send" onclick="sendMsg()" style="display: none;">End Turn</button>
     </div>
 
     <div id="WinnerScreen" style="display: none;">
       <p id="WinnerBanner" style="text-align: center;"></p>
+      <br>
       <button onclick="init();" class="button-send">Play again</button>
     </div>
     
@@ -172,7 +193,7 @@
               squares[i * 3 + j].disabled = true;
 
               squares[i * 3 + j].style.cursor = "not-allowed";
-              squares[i * 3 + j].style.backgroundColor = "white";
+              // squares[i * 3 + j].style.backgroundColor = "white";
               if (squares[i * 3 + j].classList.contains("button-gameSquareHover"))
               {
                 squares[i * 3 + j].classList.remove("button-gameSquareHover");
@@ -183,7 +204,7 @@
               squares[i * 3 + j].disabled = false;
 
               squares[i * 3 + j].style.cursor = "pointer";
-              squares[i * 3 + j].style.backgroundColor = "aliceBlue";
+              // squares[i * 3 + j].style.backgroundColor = "aliceBlue";
               squares[i * 3 + j].classList.add("button-gameSquareHover");
             }
           }
@@ -205,7 +226,7 @@
             squares[i * 3 + j].disabled = true;
 
             squares[i * 3 + j].style.cursor = "not-allowed";
-            squares[i * 3 + j].style.backgroundColor = "white";
+            // squares[i * 3 + j].style.backgroundColor = "white";
             if (squares[i * 3 + j].classList.contains("button-gameSquareHover"))
             {
               squares[i * 3 + j].classList.remove("button-gameSquareHover");
@@ -240,9 +261,12 @@
         selectedSq.classList.add("text-blink");
 
         // Now that a square's been selected, enable the "Finish Turn button"
+        document.getElementById("sendButton").style.display = "block";
         document.getElementById("sendButton").disabled = false;
         document.getElementById("sendButton").style.cursor = "pointer";
         document.getElementById("sendButton").title = "";
+        // Hide the "select a sq" banner
+        document.getElementById("chooseSqBanner").style.display = "none";
       }
 
       /*
@@ -308,7 +332,7 @@
       {
         if (winner == client)
         {
-          document.getElementById("WinnerBanner").innerHTML = "You won!";
+          document.getElementById("WinnerBanner").innerHTML = "You won! <i class='fa fa-trophy'></i>";
         }
         else if (winner == "tie")
         {
@@ -316,7 +340,7 @@
         }
         else
         {
-          document.getElementById("WinnerBanner").innerHTML = "You lost!";
+          document.getElementById("WinnerBanner").innerHTML = "You lost!</i>";
         }
         // Don't call showScreen("WinnerScreen") because that hides PlayScreen. Still want to see the board here.
         document.getElementById("WinnerScreen").style.display = "block";
@@ -346,8 +370,10 @@
             
             // hide the "it's your opponent's turn" msg
             document.getElementById("waitingBanner").style.display = "none";
+            // show the "it's your turn" msg
+            document.getElementById("chooseSqBanner").style.display = "block";
             // functionally & visually disable sendButton until player selects a square
-            document.getElementById("sendButton").style.display = "block";
+            document.getElementById("sendButton").style.display = "none";
             document.getElementById("sendButton").disabled = true;
             document.getElementById("sendButton").style.cursor = "not-allowed";
             document.getElementById("sendButton").title = "Make a move before finishing your turn.";
@@ -359,8 +385,9 @@
             showBoard(msg.board);
             deactivateSquares();
 
-            // hide the "it's your opponent's turn" msg and the sendButton
+            // show the "it's your opponent's turn" msg and hide the "it's your turn" msg and sendButton
             document.getElementById("waitingBanner").style.display = "block";
+            document.getElementById("chooseSqBanner").style.display = "none";
             document.getElementById("sendButton").style.display = "none";
             break;
           case 4:
@@ -368,8 +395,9 @@
             showBoard(msg.board);
             showWinner(msg.winner, msg.you)
 
-            // hide the "it's your opponent's turn" msg and the sendButton
+            // hide the "it's your opponent's turn" msg, "it's your turn" msg, and sendButton
             document.getElementById("waitingBanner").style.display = "none";
+            document.getElementById("chooseSqBanner").style.display = "none";
             document.getElementById("sendButton").style.display = "none";
 
             break;
