@@ -1,1 +1,1 @@
-web: python intro.py
+web: server_exe/SpaceshipRaceServer.html
